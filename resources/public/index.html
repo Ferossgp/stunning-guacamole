@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Super document</title>
+    </head>
+    <body>
+        <canvas id="canvas" width="700" height="700"></canvas>
+        <script>
+         const canvas = document.getElementById("canvas");
+         const ctx = canvas.getContext("2d");
+         function plotImageData(ctx, binaryPixelArray) {
+             const pixelArray = binaryPixelArray
+                 .map(v => {
+                     const pixel = v ? 255 : 0;
+                     const color = [pixel, pixel, pixel];
+                     return [...color, 255];
+                 })
+                 .flat();
+             const pictureSize = Math.sqrt(binaryPixelArray.length);
+             const imageData = new ImageData(
+                 new Uint8ClampedArray(pixelArray),
+                 pictureSize,
+                 pictureSize
+             );
+             ctx.putImageData(imageData, 0, 0);
+         }
+
+         function putLoadingState(ctx) {
+             ctx.font = "30px Arial";
+             ctx.fillText("Loading, please be patient...", 100, 100); 
+         }
+
+         function refreshPage(){
+             setTimeout(() => window.location.reload(), 5000)
+         }
+
+         function onCoordinatesResponse(response){
+             if (response){
+                 if(response[2] == "not ready"){
+                     putLoadingState(ctx);
+                     refreshPage();
+                 }else{
+                     plotImageData(ctx, response[1])
+                 }
+             }
+         }
+         window.onload = function() {
+             fetch('/coordinates')
+                 .then(response => response.json())
+                 .then(onCoordinatesResponse)
+                 .catch(alert);
+         };
+        </script>
+    </body>
+</html>
